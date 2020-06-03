@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>d3</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+      }
+      #container {
+        height: 100%;
+        margin: 0px auto;
+      }
+
+      .bar {
+        fill: steelblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script src="./js/d3.js"></script>
+    <script src="./js/mock.js"></script>
+    <script src="./data/bar.js"></script>
+    <script>
+      const margin = { top: 40, right: 20, bottom: 30, left: 60 };
+
+      function draw() {
+        d3.selectAll("svg").remove();
+        let el = document.getElementById("container");
+        let rect = el.getBoundingClientRect();
+        let _width = rect.width,
+          _height = rect.height,
+          width = _width - margin.left - margin.right,
+          height = _height - margin.top - margin.bottom;
+
+        // 定义比例尺
+        let xScale = d3.scaleBand().range([0, width]).padding(0.5);
+        let yScale = d3.scaleLinear().range([height, 0]);
+        // 定义坐标轴
+        let xAxis = d3.axisBottom(xScale);
+        let yAxis = d3.axisLeft(yScale);
+
+        // 创建绘图区域
+        let svg = d3
+          .select("#container")
+          .append("svg")
+          .attr("width", _width)
+          .attr("height", _height)
+          .append("g")
+          .attr(
+            "transform",
+            "translate(" + margin.left + "," + margin.top + ")"
+          );
+
+        xScale.domain(
+          dataVo.data.map(function (d) {
+            return d.date;
+          })
+        );
+        yScale.domain([
+          0,
+          d3.max(dataVo.data, function (d) {
+            return d.count;
+          }),
+        ]);
+        svg
+          .append("g")
+          .attr("class", "x-axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+        svg
+          .append("g")
+          .attr("class", "y-axis")
+          .call(yAxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", "0.71em")
+          .attr("text-anchor", "end")
+          .text("频率");
+
+        svg
+          .append("g")
+          .attr("class", "bars")
+          .selectAll(".bar")
+          .data(dataVo.data)
+          .enter()
+          .append("rect")
+          .attr("class", "bar")
+          .attr("x", function (d) {
+            return xScale(d.date);
+          })
+          .attr("width", xScale.bandwidth())
+          .attr("y", function (d) {
+            return yScale(d.count);
+          })
+          .attr("height", function (d) {
+            return height - yScale(d.count);
+          });
+
+        // 绘制图例
+        let legendWrap = svg.append("g");
+        let series = legendWrap.append("g").attr("class", "series");
+        series
+          .append("circle")
+          .attr("stroke-width", 2)
+          .attr("fill", "steelblue")
+          .attr("stroke", "steelblue")
+          .attr("r", 6);
+        series
+          .append("text")
+          .attr("font-size", "0.75em")
+          .attr("text-anchor", "start")
+          .attr("dy", ".32em")
+          .attr("dx", 12)
+          .text(dataVo.title);
+
+        let legendWidth = legendWrap.node().getBoundingClientRect().width;
+
+        legendWrap.attr(
+          "transform",
+          "translate(" + (width - legendWidth) / 2 + ", -16)"
+        );
+      }
+      draw();
+      window.addEventListener("resize", () => {
+        draw();
+      });
+    </script>
+  </body>
+</html>
