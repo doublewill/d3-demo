@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>d3</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+    }
+
+    #container {
+      height: 100%;
+      margin: 0px auto;
+    }
+
+    .bar {
+      fill: steelblue;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <script src="./js/d3.js"></script>
+  <script src="./js/mock.js"></script>
+  <script src="./data/bar.js"></script>
+  <script>
+    const margin = { top: 40, right: 20, bottom: 30, left: 60 };
+
+    function draw() {
+      d3.selectAll("svg").remove();
+      let el = document.getElementById("container");
+      let rect = el.getBoundingClientRect();
+      let _width = rect.width,
+        _height = rect.height,
+        width = _width - margin.left - margin.right,
+        height = _height - margin.top - margin.bottom;
+      let svg = d3.select('#container')
+      .append('svg').attr('width', _width).attr('height', _height)
+
+      const xScale = d3.scaleBand().domain(d3.range(dataVo.data.length))
+      .range([0, _width - margin.left - margin.right])
+      const yScale = d3.scaleLinear()
+      .domain([0, d3.max(dataVo.data.map(o=> o.count))])
+      .range([_height - margin.top - margin.bottom, 0])
+      
+      svg.append('g')
+      .attr('transform', `translate(${margin.left}, ${_height - margin.bottom})`)
+      .call(d3.axisBottom(xScale))
+
+      svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`)      
+        .call(d3.axisLeft(yScale))
+
+        const ss = svg.selectAll('.line')
+        .data(dataVo.data)
+        .enter()
+        .append('line')
+        .attr('style', 'stroke: #600090')
+        .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+        .attr('x1', (_, i)=> {
+          return xScale(i) + xScale.step() / 2
+        })
+        .attr('y1', d=> {
+          return yScale(d.count)
+        })
+        .attr('x2', (_, i)=> {
+          return i + 1 < dataVo.data.length 
+          ? xScale(i + 1) + xScale.step() / 2
+          : xScale(i) + xScale.step() / 2
+        })
+        .attr('y2', (_, i)=> {
+          return i + 1 < dataVo.data.length ? yScale(dataVo.data[i + 1].count) : yScale(dataVo.data[i].count)
+        })
+
+        svg.selectAll('circle')
+        .data(dataVo.data)
+        .enter()
+        .append('circle')
+        .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+        .attr('cx', (d,i)=> {
+          return xScale(i) + xScale.step() / 2
+        })
+        .attr('cy', (d, i) => {
+          return yScale(d.count)
+        })
+        .attr('r', 5)
+        .attr('fill', (_, i) =>  '#690')
+
+        
+      svg.selectAll('text')
+        .data(dataVo.data)
+        .enter()
+        .append('text')
+        .attr('fill', (_, i) => '#f08d49')
+        .attr('transform', `translate(${margin.left}, ${margin.bottom})`)
+        .attr('x', (d, i) => {
+          return xScale(i) + xScale.step() / 2
+        })
+        .attr('y', (d, i) => {
+          return yScale(d.count)
+        })
+        .text(d=> d.count)
+    }
+    draw();
+    window.addEventListener("resize", () => {
+      draw();
+    });
+  </script>
+</body>
+
+</html>
